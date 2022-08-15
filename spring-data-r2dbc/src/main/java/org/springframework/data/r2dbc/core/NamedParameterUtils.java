@@ -509,21 +509,23 @@ abstract class NamedParameterUtils {
 
 			if (value instanceof Collection) {
 				Collection<Object> collection = (Collection<Object>) value;
-
-				Iterator<Object> iterator = collection.iterator();
 				Iterator<BindMarker> markers = bindMarkers.iterator();
 
-				while (iterator.hasNext()) {
+				while (markers.hasNext()) {
+					Assert.isTrue(!collection.isEmpty(),
+						() -> String.format(
+							"No value for bind markers [%s] in SQL [%s]. Check that the query was expanded using the same arguments.",
+							markers, toQuery()));
 
-					Object valueToBind = iterator.next();
-
-					if (valueToBind instanceof Object[]) {
-						Object[] objects = (Object[]) valueToBind;
-						for (Object object : objects) {
-							bind(target, markers, object);
+					for (Object valueToBind : collection) {
+						if (valueToBind instanceof Object[]) {
+							Object[] objects = (Object[]) valueToBind;
+							for (Object object : objects) {
+								bind(target, markers, object);
+							}
+						} else {
+							bind(target, markers, valueToBind);
 						}
-					} else {
-						bind(target, markers, valueToBind);
 					}
 				}
 			} else {
